@@ -15,6 +15,10 @@ import util.IOUtils;
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
 
+    private static final int headerKey = 0;
+
+    private static final int headerValue = 1;
+
     private Socket connection;
 
     public RequestHandler(Socket connectionSocket) {
@@ -52,8 +56,8 @@ public class RequestHandler extends Thread {
             for (String httpHeader:
                  httpHeaders) {
                 String[] header = httpHeader.split(" ");
-                if (header[0].contains("Content-Length:")){
-                    contentLength = Integer.parseInt(header[1]);
+                if (header[headerKey].contains("Content-Length:")){
+                    contentLength = Integer.parseInt(header[headerValue]);
                 }
             }
 
