@@ -3,9 +3,13 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.util.HashMap;
+import java.util.Map;
 
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.HttpRequestUtils;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -26,6 +30,7 @@ public class RequestHandler extends Thread {
          */
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             BufferedReader buffer = new BufferedReader(new InputStreamReader(in,"UTF-8"));
+            Map<String, String> queryStringMap;
             String line = buffer.readLine();
 
             if (line == null){
@@ -34,7 +39,22 @@ public class RequestHandler extends Thread {
 
             String[] tokens = line.split(" ");
 
-            for (String token: tokens) {
+            for (String token: tokens){
+                if(token.contains("?")){
+                    int idx = token.indexOf("?");
+                    String queryString = token.substring(idx + 1);
+                    queryStringMap = HttpRequestUtils.parseQueryString(queryString);
+
+                    String userId = queryStringMap.get("userId");
+                    String password = queryStringMap.get("password");
+                    String name = queryStringMap.get("name");
+                    String email = queryStringMap.get("email");
+
+                    User user = new User(userId, password, name, email);
+                    System.out.println("user = " + user);
+
+                }
+
                 if (token.equals("/index.html")){
                     String url = token;
                     byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
