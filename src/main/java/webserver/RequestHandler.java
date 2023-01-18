@@ -77,6 +77,8 @@ public class RequestHandler extends Thread {
                 if (path.equals("/user/create")){
                     String body = IOUtils.readData(buffer, contentLength);
                     createUser(body, getQueryParamMap(body));
+                    DataOutputStream dos = new DataOutputStream(out);
+                    response302Header(dos);
                 }
             }
         } catch (IOException e) {
@@ -111,6 +113,16 @@ public class RequestHandler extends Thread {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
+    private void response302Header(DataOutputStream dos) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: http://localhost:9090/index.html \r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
