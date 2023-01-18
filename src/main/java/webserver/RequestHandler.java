@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 
 import model.User;
@@ -33,15 +32,14 @@ public class RequestHandler extends Thread {
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             BufferedReader buffer = new BufferedReader(new InputStreamReader(in,"UTF-8"));
 
-            ArrayList<String> httpHeaders = new ArrayList<>();
             String line = buffer.readLine();
-
             if (line == null){
                 return;
             }
 
+            ArrayList<String> httpHeaders = new ArrayList<>();
             while (!line.equals("")){
-                System.out.println("line = " + line);
+                System.out.println("header = " + line);
                 httpHeaders.add(line);
                 line = buffer.readLine();
             }
@@ -61,52 +59,51 @@ public class RequestHandler extends Thread {
 
             if (method.equals("GET")){
                 if (path.equals("/index.html")){
-                    byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
-                    DataOutputStream dos = new DataOutputStream(out);
-                    response200Header(dos, body.length);
-                    responseBody(dos, body);
+                    response(out, path);
                 }
 
                 if (path.equals("/user/form.html")){
-                    byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
-                    DataOutputStream dos = new DataOutputStream(out);
-                    response200Header(dos, body.length);
-                    responseBody(dos, body);
+                    response(out, path);
                 }
 
                 if (path.contains("?")){
                     int idx = path.indexOf("?");
                     String queryParam = path.substring(idx + 1);
-                    Map<String, String> queryParamMap = HttpRequestUtils.parseQueryString(queryParam);
-
-                    String userId = queryParamMap.get("userId");
-                    String password = queryParamMap.get("password");
-                    String name = queryParamMap.get("name");
-                    String email = queryParamMap.get("email");
-
-                    User user = new User(userId, password, name, email);
-                    System.out.println("user = " + user);
+                    createUser(queryParam, getQueryParamMap(queryParam));
                 }
             }
 
             if (method.equals("POST")){
                 if (path.equals("/user/create")){
                     String body = IOUtils.readData(buffer, contentLength);
-                    Map<String, String> queryParamMap = HttpRequestUtils.parseQueryString(body);
-
-                    String userId = queryParamMap.get("userId");
-                    String password = queryParamMap.get("password");
-                    String name = queryParamMap.get("name");
-                    String email = queryParamMap.get("email");
-
-                    User user = new User(userId, password, name, email);
-                    System.out.println("user = " + user);
-
+                    createUser(body, getQueryParamMap(body));
                 }
             }
         } catch (IOException e) {
             log.error(e.getMessage());
         }
+    }
+
+    private void response(OutputStream out, String path) throws IOException {
+        byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+        DataOutputStream dos = new DataOutputStream(out);
+        response200Header(dos, body.length);
+        responseBody(dos, body);
+    }
+
+    private void createUser(String body, Map<String, String> queryParamMap) {
+        String userId = queryParamMap.get("userId");
+        String password = queryParamMap.get("password");
+        String name = queryParamMap.get("name");
+        String email = queryParamMap.get("email");
+
+        User user = new User(userId, password, name, email);
+        System.out.println("user = " + user);
+    }
+
+    private static Map<String, String> getQueryParamMap(String body) {
+        Map<String, String> queryParamMap = HttpRequestUtils.parseQueryString(body);
+        return queryParamMap;
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
