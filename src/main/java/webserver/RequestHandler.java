@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Map;
 
+import db.DataBase;
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +71,14 @@ public class RequestHandler extends Thread {
                     response(out, path);
                 }
 
+                if (path.equals("/user/login.html")){
+                    response(out, path);
+                }
+
+                if (path.equals("/user/login_failed.html")){
+                    response(out, path);
+                }
+
                 if (path.contains("?")){
                     int idx = path.indexOf("?");
                     String queryParam = path.substring(idx + 1);
@@ -82,7 +91,20 @@ public class RequestHandler extends Thread {
                     String body = IOUtils.readData(buffer, contentLength);
                     createUser(body, getQueryParamMap(body));
                     DataOutputStream dos = new DataOutputStream(out);
-                    response302Header(dos);
+                    response302Header(dos, "http://localhost:9090/index.html", "false");
+                }
+
+                if (path.equals("/user/login")){
+                    String body = IOUtils.readData(buffer, contentLength);
+                    Map<String, String> queryParamMap = getQueryParamMap(body);
+                    DataOutputStream dos = new DataOutputStream(out);
+                    String userId = queryParamMap.get("userId");
+
+                    if (DataBase.findUserById(userId) != null){
+                        response302Header(dos, "http://localhost:9090/index.html", "true");
+                    }else{
+                        response302Header(dos, "http://localhost:9090/user/login_failed.html", "false");
+                    }
                 }
             }
         } catch (IOException e) {
@@ -104,6 +126,7 @@ public class RequestHandler extends Thread {
         String email = queryParamMap.get("email");
 
         User user = new User(userId, password, name, email);
+        DataBase.addUser(user);
         System.out.println("user = " + user);
     }
 
@@ -123,10 +146,11 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private void response302Header(DataOutputStream dos) {
+    private void response302Header(DataOutputStream dos, String url, String cookie) {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
-            dos.writeBytes("Location: http://localhost:9090/index.html \r\n");
+            dos.writeBytes("Location: " + url + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=" + cookie + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
