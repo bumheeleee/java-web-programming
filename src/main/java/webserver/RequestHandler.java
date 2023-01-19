@@ -55,7 +55,7 @@ public class RequestHandler extends Thread {
 
             int contentLength = 0;
             for (String httpHeader:
-                 httpHeaders) {
+                    httpHeaders) {
                 String[] header = httpHeader.split(" ");
                 if (header[headerKey].contains("Content-Length:")){
                     contentLength = Integer.parseInt(header[headerValue]);
@@ -91,7 +91,7 @@ public class RequestHandler extends Thread {
                     String body = IOUtils.readData(buffer, contentLength);
                     createUser(body, getQueryParamMap(body));
                     DataOutputStream dos = new DataOutputStream(out);
-                    response302Header(dos, "http://localhost:9090/index.html", "false");
+                    response302Header(dos, "http://localhost:9090/index.html");
                 }
 
                 if (path.equals("/user/login")){
@@ -146,11 +146,21 @@ public class RequestHandler extends Thread {
         }
     }
 
+    private void response302Header(DataOutputStream dos, String url) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 Found \r\n");
+            dos.writeBytes("Location: " + url + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
     private void response302Header(DataOutputStream dos, String url, String cookie) {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + url + "\r\n");
-            dos.writeBytes("Set-Cookie: logined=" + cookie + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=" + cookie + ";" + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
