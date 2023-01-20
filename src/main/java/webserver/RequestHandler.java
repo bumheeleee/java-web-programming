@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 
 import db.DataBase;
@@ -54,14 +55,21 @@ public class RequestHandler extends Thread {
             String path = startLine[1];
 
             int contentLength = 0;
+            String cookie = "";
             for (String httpHeader:
                     httpHeaders) {
                 String[] header = httpHeader.split(" ");
                 if (header[headerKey].contains("Content-Length:")){
                     contentLength = Integer.parseInt(header[headerValue]);
                 }
+                if (header[headerKey].contains("Cookie:")){
+                    cookie = header[headerValue];
+                }
             }
 
+            /**
+             * method : GET
+             */
             if (method.equals("GET")){
                 if (path.equals("/index.html")){
                     response(out, path);
@@ -79,6 +87,35 @@ public class RequestHandler extends Thread {
                     response(out, path);
                 }
 
+                if (path.equals("/user/list")){
+                    Map<String, String> stringStringMap = HttpRequestUtils.parseCookies(cookie);
+                    boolean login = Boolean.parseBoolean(stringStringMap.get("login"));
+                    DataOutputStream dos = new DataOutputStream(out);
+
+                    if (login){
+                        Collection<User> users = DataBase.findAll();
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("<table>");
+                        for (User user:
+                             users) {
+                            sb.append("<tr>");
+                            sb.append("<td>" + user.getUserId() + "</td>");
+                            sb.append("<td>" + user.getName() + "</td>");
+                            sb.append("<td>" + user.getEmail() + "</td>");
+                            sb.append("</tr>");
+                        }
+                        sb.append("</table>");
+                        dos.writeBytes("HTTP/1.1 200 OK \r\n");
+                        dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+                        dos.writeBytes("Content-Length: " + sb.length() + "\r\n");
+                        dos.writeBytes("\r\n");
+                        dos.writeBytes(sb.toString());
+                    }else {
+                        response302Header(dos, "/user/login.html");
+                    }
+
+                }
+
                 if (path.contains("?")){
                     int idx = path.indexOf("?");
                     String queryParam = path.substring(idx + 1);
@@ -86,6 +123,9 @@ public class RequestHandler extends Thread {
                 }
             }
 
+            /**
+             * method : POST
+             */
             if (method.equals("POST")){
                 if (path.equals("/user/create")){
                     String body = IOUtils.readData(buffer, contentLength);
@@ -160,7 +200,7 @@ public class RequestHandler extends Thread {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + url + "\r\n");
-            dos.writeBytes("Set-Cookie: logined=" + cookie + ";" + "\r\n");
+            dos.writeBytes("Set-Cookie: login=" + cookie + ";" + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
