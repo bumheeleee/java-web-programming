@@ -89,10 +89,10 @@ public class RequestHandler extends Thread {
 
                 if (path.equals("/user/list")){
                     Map<String, String> stringStringMap = HttpRequestUtils.parseCookies(cookie);
-                    boolean login = Boolean.parseBoolean(stringStringMap.get("login"));
+                    boolean logined = Boolean.parseBoolean(stringStringMap.get("logined"));
                     DataOutputStream dos = new DataOutputStream(out);
 
-                    if (login){
+                    if (logined){
                         Collection<User> users = DataBase.findAll();
                         StringBuilder sb = new StringBuilder();
                         sb.append("<table>");
@@ -222,7 +222,7 @@ public class RequestHandler extends Thread {
         try {
             dos.writeBytes("HTTP/1.1 302 Found \r\n");
             dos.writeBytes("Location: " + url + "\r\n");
-            dos.writeBytes("Set-Cookie: login=" + cookie + ";" + "\r\n");
+            dos.writeBytes("Set-Cookie: logined=" + cookie + ";" + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
             log.error(e.getMessage());
