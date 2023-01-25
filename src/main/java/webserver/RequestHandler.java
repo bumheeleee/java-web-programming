@@ -87,6 +87,18 @@ public class RequestHandler extends Thread {
                     response(out, path);
                 }
 
+                if (path.startsWith("/user/create")){
+                    /**
+                     * GET 방식으로 create user
+                     */
+                    if (path.contains("?")){
+                        int idx = path.indexOf("?");
+                        String queryParam = path.substring(idx + 1);
+                        createUser(queryParam, getQueryParamMap(queryParam));
+                    }
+                }
+
+
                 if (path.equals("/user/list")){
                     Map<String, String> stringStringMap = HttpRequestUtils.parseCookies(cookie);
                     boolean logined = Boolean.parseBoolean(stringStringMap.get("logined"));
@@ -118,14 +130,6 @@ public class RequestHandler extends Thread {
 
                 if (path.endsWith(".css")){
                     responseCss(out, path);
-                }
-                /**
-                 * GET 방식으로 create user
-                 */
-                if (path.contains("?")){
-                    int idx = path.indexOf("?");
-                    String queryParam = path.substring(idx + 1);
-                    createUser(queryParam, getQueryParamMap(queryParam));
                 }
             }
 
