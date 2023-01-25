@@ -119,7 +119,9 @@ public class RequestHandler extends Thread {
                 if (path.endsWith(".css")){
                     responseCss(out, path);
                 }
-
+                /**
+                 * GET 방식으로 create user
+                 */
                 if (path.contains("?")){
                     int idx = path.indexOf("?");
                     String queryParam = path.substring(idx + 1);
@@ -143,8 +145,11 @@ public class RequestHandler extends Thread {
                     Map<String, String> queryParamMap = getQueryParamMap(body);
                     DataOutputStream dos = new DataOutputStream(out);
                     String userId = queryParamMap.get("userId");
+                    String password = queryParamMap.get("password");
 
-                    if (DataBase.findUserById(userId) != null){
+                    User findUser = DataBase.findUserById(userId);
+
+                    if (findUser.getUserId().equals(userId) && findUser.getPassword().equals(password)){
                         response302Header(dos, "http://localhost:9090/index.html", "true");
                     }else{
                         response302Header(dos, "http://localhost:9090/user/login_failed.html", "false");
