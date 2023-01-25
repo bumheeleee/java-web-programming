@@ -129,7 +129,8 @@ public class RequestHandler extends Thread {
                 }
 
                 if (path.endsWith(".css")){
-                    responseCss(out, path);
+                    byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+                    responseCss(out, body);
                 }
             }
 
@@ -171,8 +172,7 @@ public class RequestHandler extends Thread {
         responseBody(dos, body);
     }
 
-    private void responseCss(OutputStream out, String path) throws IOException {
-        byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+    private void responseCss(OutputStream out, byte[] body) throws IOException {
         DataOutputStream dos = new DataOutputStream(out);
         response200HeaderCss(dos, body.length);
         responseBody(dos, body);
