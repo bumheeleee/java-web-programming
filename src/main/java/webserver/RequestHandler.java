@@ -45,7 +45,7 @@ public class RequestHandler extends Thread {
 
             ArrayList<String> httpHeaders = new ArrayList<>();
             while (!line.equals("")){
-                System.out.println("header = " + line);
+                log.debug("header : {}", line);
                 httpHeaders.add(line);
                 line = buffer.readLine();
             }
@@ -183,7 +183,8 @@ public class RequestHandler extends Thread {
 
         User user = new User(userId, password, name, email);
         DataBase.addUser(user);
-        System.out.println("user = " + user);
+        log.debug("User -> userId : {}, password : {}, name : {}, email : {}"
+                ,user.getUserId(), user.getPassword(), user.getName(), user.getEmail());
     }
 
     private static Map<String, String> getQueryParamMap(String body) {
