@@ -72,19 +72,23 @@ public class RequestHandler extends Thread {
              */
             if (method.equals("GET")){
                 if (path.equals("/index.html")){
-                    response(out, path);
+                    byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+                    response(out, body);
                 }
 
                 if (path.equals("/user/form.html")){
-                    response(out, path);
+                    byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+                    response(out, body);
                 }
 
                 if (path.equals("/user/login.html")){
-                    response(out, path);
+                    byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+                    response(out, body);
                 }
 
                 if (path.equals("/user/login_failed.html")){
-                    response(out, path);
+                    byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+                    response(out, body);
                 }
 
                 if (path.startsWith("/user/create")){
@@ -102,7 +106,6 @@ public class RequestHandler extends Thread {
                 if (path.equals("/user/list")){
                     Map<String, String> stringStringMap = HttpRequestUtils.parseCookies(cookie);
                     boolean logined = Boolean.parseBoolean(stringStringMap.get("logined"));
-                    DataOutputStream dos = new DataOutputStream(out);
 
                     if (logined){
                         Collection<User> users = DataBase.findAll();
@@ -117,13 +120,10 @@ public class RequestHandler extends Thread {
                             sb.append("</tr>");
                         }
                         sb.append("</table>");
-                        dos.writeBytes("HTTP/1.1 200 OK \r\n");
-                        dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
-                        dos.writeBytes("Content-Length: " + sb.length() + "\r\n");
-                        dos.writeBytes("\r\n");
-                        dos.writeBytes(sb.toString());
+                        byte[] body = sb.toString().getBytes();
+                        response(out, body);
                     }else {
-                        response302Header(dos, "/user/login.html");
+                        response302Header(new DataOutputStream(out), "/user/login.html");
                     }
 
                 }
@@ -165,8 +165,7 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private void response(OutputStream out, String path) throws IOException {
-        byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+    private void response(OutputStream out, byte[] body) throws IOException {
         DataOutputStream dos = new DataOutputStream(out);
         response200Header(dos, body.length);
         responseBody(dos, body);
