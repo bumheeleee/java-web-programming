@@ -16,9 +16,7 @@ public class HttpRequest {
 
     private Map<String, String> params = new HashMap<>();
 
-    private String method;
-
-    private String path;
+    private StartLine startLine;
 
     public HttpRequest(InputStream is) {
         BufferedReader buffer = null;
@@ -31,7 +29,7 @@ public class HttpRequest {
             /**
              * path, method 정보
              */
-            processStartLine(line);
+            startLine = new StartLine(line);
 
             /**
              * header를 Map에 저장
@@ -44,57 +42,24 @@ public class HttpRequest {
                 line = buffer.readLine();
             }
 
-            if (method.equals("POST")) {
+            if (getMethod().equals("POST")) {
                 String body = IOUtils.readData(buffer,
                         Integer.parseInt(httpHeaders.get("Content-Length")));
                 params = HttpRequestUtils.parseQueryString(body);
+            }else{
+                params = startLine.getParams();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
-    }
-
-    /**
-     * private 메서드의 복잡도가 높다
-     * 이러한 경우는 테스트 코드를 작성할때 2가지 경우가 있다.
-     * 1. default를 사용해서 test를 진행한다.
-     * 2. class로 새로 만들어서 test를 진행한다.
-     * 나는 후자로 테스트를 진행해 보겠다.
-     */
-    private void processStartLine(String startLine){
-        /**
-         * startLine에서 method, path 뽑아내기
-         */
-        log.debug("startLine : {}", startLine);
-        String[] token = startLine.split(" ");
-        method = token[0];
-
-        if ("POST".equals(method)){
-            path = token[1];
-            return;
-        }else{
-            /**
-             * GET일 경우 2가지 -> 쿼리스트링이 있는경우, 쿼리스트링이 없는경우
-             */
-            int idx = token[1].indexOf("?");
-            // 쿼리스트링이 없는경우
-            if (idx == -1){
-                path = token[1];
-            }else{
-                // 쿼리스트링이 있는경우
-                path = token[1].substring(0, idx);
-                params = HttpRequestUtils.parseQueryString(token[1].substring(idx+1));
-            }
-        }
     }
 
     public String getMethod() {
-        return method;
+        return startLine.getMethod();
     }
 
     public String getPath() {
-        return path;
+        return startLine.getPath();
     }
 
     public String getHeader(String name) {
