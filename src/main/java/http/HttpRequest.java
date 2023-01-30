@@ -55,6 +55,13 @@ public class HttpRequest {
 
     }
 
+    /**
+     * private 메서드의 복잡도가 높다
+     * 이러한 경우는 테스트 코드를 작성할때 2가지 경우가 있다.
+     * 1. default를 사용해서 test를 진행한다.
+     * 2. class로 새로 만들어서 test를 진행한다.
+     * 나는 후자로 테스트를 진행해 보겠다.
+     */
     private void processStartLine(String startLine){
         /**
          * startLine에서 method, path 뽑아내기
