@@ -39,7 +39,7 @@ public class HttpRequest {
             line = buffer.readLine();
             while (!line.equals("")) {
                 log.debug("header : {}", line);
-                String[] header = line.split(":");
+                String[] header = line.split(": ");
                 httpHeaders.put(header[0], header[1]);
                 line = buffer.readLine();
             }
@@ -77,7 +77,7 @@ public class HttpRequest {
             }else{
                 // 쿼리스트링이 있는경우
                 path = token[1].substring(0, idx);
-                params = HttpRequestUtils.parseQueryString(token[1].substring(idx));
+                params = HttpRequestUtils.parseQueryString(token[1].substring(idx+1));
             }
         }
     }
