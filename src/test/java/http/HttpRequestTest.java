@@ -13,6 +13,10 @@ public class HttpRequestTest {
 
     @Test
     public void request_GET() throws Exception {
+        /*
+            InputStream in = new FileInputStream(testDirectory + "Http_GET.txt");
+            FileInputStream(File file) or FileInputStream(String name) Possible
+         */
         InputStream in = new FileInputStream(new File(testDirectory + "Http_GET.txt"));
         HttpRequest request = new HttpRequest(in);
 
