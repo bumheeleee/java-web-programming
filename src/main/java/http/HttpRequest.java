@@ -1,7 +1,6 @@
 package http;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +15,7 @@ public class HttpRequest {
 
     private Map<String, String> params = new HashMap<>();
 
-    private StartLine startLine;
+    private StartLineHandler startLineHandler;
 
     public HttpRequest(InputStream is) {
         BufferedReader buffer = null;
@@ -29,7 +28,7 @@ public class HttpRequest {
             /**
              * path, method 정보
              */
-            startLine = new StartLine(line);
+            startLineHandler = new StartLineHandler(line);
 
             /**
              * header를 Map에 저장
@@ -47,7 +46,7 @@ public class HttpRequest {
                         Integer.parseInt(httpHeaders.get("Content-Length")));
                 params = HttpRequestUtils.parseQueryString(body);
             }else{
-                params = startLine.getParams();
+                params = startLineHandler.getParams();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -55,11 +54,11 @@ public class HttpRequest {
     }
 
     public String getMethod() {
-        return startLine.getMethod();
+        return startLineHandler.getMethod();
     }
 
     public String getPath() {
-        return startLine.getPath();
+        return startLineHandler.getPath();
     }
 
     public String getHeader(String name) {
