@@ -7,13 +7,13 @@ import util.HttpRequestUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StartLineHandler {
-    private static final Logger log = LoggerFactory.getLogger(StartLineHandler.class);
+public class StartLineParsing {
+    private static final Logger log = LoggerFactory.getLogger(StartLineParsing.class);
     private Map<String, String> params = new HashMap<>();
     private String method;
     private String path;
 
-    public StartLineHandler(String startLine) {
+    public StartLineParsing(String startLine) {
         /**
          * startLine에서 method, path 뽑아내기
          */

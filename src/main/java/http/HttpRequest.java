@@ -15,7 +15,7 @@ public class HttpRequest {
 
     private Map<String, String> params = new HashMap<>();
 
-    private StartLineHandler startLineHandler;
+    private StartLineParsing startLineParsing;
 
     public HttpRequest(InputStream is) {
         BufferedReader buffer = null;
@@ -28,7 +28,7 @@ public class HttpRequest {
             /**
              * path, method 정보
              */
-            startLineHandler = new StartLineHandler(line);
+            startLineParsing = new StartLineParsing(line);
 
             /**
              * header를 Map에 저장
@@ -46,7 +46,7 @@ public class HttpRequest {
                         Integer.parseInt(httpHeaders.get("Content-Length")));
                 params = HttpRequestUtils.parseQueryString(body);
             }else{
-                params = startLineHandler.getParams();
+                params = startLineParsing.getParams();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -54,11 +54,11 @@ public class HttpRequest {
     }
 
     public String getMethod() {
-        return startLineHandler.getMethod();
+        return startLineParsing.getMethod();
     }
 
     public String getPath() {
-        return startLineHandler.getPath();
+        return startLineParsing.getPath();
     }
 
     public String getHeader(String name) {
