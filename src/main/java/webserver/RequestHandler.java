@@ -109,7 +109,7 @@ public class RequestHandler extends Thread {
                     );
                     createUser(user);
                     DataOutputStream dos = new DataOutputStream(out);
-                    response302Header(dos, "http://localhost:9090/index.html");
+                    response302Header(dos, "http://15.165.185.73:9090");
                 }
 
                 if (path.equals("/user/login")){
@@ -119,9 +119,9 @@ public class RequestHandler extends Thread {
                     User findUser = DataBase.findUserById(userId);
 
                     if (findUser.getUserId().equals(userId) && findUser.getPassword().equals(password)){
-                        response302Header(dos, "http://localhost:9090/index.html", "true");
+                        response302Header(dos, "http://15.165.185.73:9090", "true");
                     }else{
-                        response302Header(dos, "http://localhost:9090/user/login_failed.html", "false");
+                        response302Header(dos, "http://15.165.185.73:9090/user/login_failed.html", "false");
                     }
                 }
             }
