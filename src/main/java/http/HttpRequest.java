@@ -36,24 +36,30 @@ public class HttpRequest {
             line = buffer.readLine();
             while (!line.equals("")) {
                 log.debug("header : {}", line);
+                //": " => 공백이 하나 들어감 (파싱할때 주의)
                 String[] header = line.split(": ");
                 httpHeaders.put(header[0], header[1]);
                 line = buffer.readLine();
             }
 
-            if (getMethod().equals("POST")) {
+            /**
+             * GET, POST 방식에 따라 Param 설정
+             */
+            if (getMethod().isGet()){
+                params = startLineParsing.getParams();
+            }
+
+            if (getMethod().isPost()) {
                 String body = IOUtils.readData(buffer,
                         Integer.parseInt(httpHeaders.get("Content-Length")));
                 params = HttpRequestUtils.parseQueryString(body);
-            }else{
-                params = startLineParsing.getParams();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public String getMethod() {
+    public HttpMethod getMethod() {
         return startLineParsing.getMethod();
     }
 
