@@ -15,5 +15,5 @@
 
 #### deployed server
 ```
-http://15.165.185.73:9090/index.html
+http://15.165.185.73:9090
 ```
