@@ -3,26 +3,19 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
 import db.DataBase;
+import http.HttpRequest;
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
-import util.IOUtils;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
-
-    private static final int headerKey = 0;
-
-    private static final int headerValue = 1;
-
     private Socket connection;
-
     public RequestHandler(Socket connectionSocket) {
         this.connection = connectionSocket;
     }
@@ -36,41 +29,13 @@ public class RequestHandler extends Thread {
          * in : 클라이언트에서 서버로 요청을 보낼때 사용, out : 서버에서 클라이언트로 데이터를 보낼때 사용
          */
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-            BufferedReader buffer = new BufferedReader(new InputStreamReader(in,"UTF-8"));
-
-            String line = buffer.readLine();
-            if (line == null){
-                return;
-            }
-
-            ArrayList<String> httpHeaders = new ArrayList<>();
-            while (!line.equals("")){
-                log.debug("header : {}", line);
-                httpHeaders.add(line);
-                line = buffer.readLine();
-            }
-
-            String[] startLine = httpHeaders.get(0).split(" ");
-            String method = startLine[0];
-            String path = startLine[1];
-
-            int contentLength = 0;
-            String cookie = "";
-            for (String httpHeader:
-                    httpHeaders) {
-                String[] header = httpHeader.split(" ");
-                if (header[headerKey].contains("Content-Length:")){
-                    contentLength = Integer.parseInt(header[headerValue]);
-                }
-                if (header[headerKey].contains("Cookie:")){
-                    cookie = header[headerValue];
-                }
-            }
+            HttpRequest httpRequest = new HttpRequest(in);
+            String path = getPath(httpRequest.getPath());
 
             /**
              * method : GET
              */
-            if (method.equals("GET")){
+            if (httpRequest.getMethod().isGet()){
                 if (path.equals("/index.html")){
                     byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
                     response(out, body);
@@ -91,23 +56,21 @@ public class RequestHandler extends Thread {
                     response(out, body);
                 }
 
-                if (path.startsWith("/user/create")){
+                if (path.equals("/user/create")){
                     /**
                      * GET 방식으로 create user
                      */
-                    if (path.contains("?")){
-                        int idx = path.indexOf("?");
-                        String queryParam = path.substring(idx + 1);
-                        createUser(queryParam, getQueryParamMap(queryParam));
-                    }
+                    User user = new User(
+                            httpRequest.getParameter("userId"),
+                            httpRequest.getParameter("password"),
+                            httpRequest.getParameter("name"),
+                            httpRequest.getParameter("email")
+                    );
+                    createUser(user);
                 }
 
-
                 if (path.equals("/user/list")){
-                    Map<String, String> stringStringMap = HttpRequestUtils.parseCookies(cookie);
-                    boolean logined = Boolean.parseBoolean(stringStringMap.get("logined"));
-
-                    if (logined){
+                    if (isLogin(httpRequest.getHeader("Cookie"))){
                         Collection<User> users = DataBase.findAll();
                         StringBuilder sb = new StringBuilder();
                         sb.append("<table>");
@@ -125,7 +88,6 @@ public class RequestHandler extends Thread {
                     }else {
                         response302Header(new DataOutputStream(out), "/user/login.html");
                     }
-
                 }
 
                 if (path.endsWith(".css")){
@@ -137,21 +99,23 @@ public class RequestHandler extends Thread {
             /**
              * method : POST
              */
-            if (method.equals("POST")){
+            if (httpRequest.getMethod().isPost()){
                 if (path.equals("/user/create")){
-                    String body = IOUtils.readData(buffer, contentLength);
-                    createUser(body, getQueryParamMap(body));
+                    User user = new User(
+                            httpRequest.getParameter("userId"),
+                            httpRequest.getParameter("password"),
+                            httpRequest.getParameter("name"),
+                            httpRequest.getParameter("email")
+                    );
+                    createUser(user);
                     DataOutputStream dos = new DataOutputStream(out);
                     response302Header(dos, "http://localhost:9090/index.html");
                 }
 
                 if (path.equals("/user/login")){
-                    String body = IOUtils.readData(buffer, contentLength);
-                    Map<String, String> queryParamMap = getQueryParamMap(body);
+                    String userId = httpRequest.getParameter("userId");
+                    String password = httpRequest.getParameter("password");
                     DataOutputStream dos = new DataOutputStream(out);
-                    String userId = queryParamMap.get("userId");
-                    String password = queryParamMap.get("password");
-
                     User findUser = DataBase.findUserById(userId);
 
                     if (findUser.getUserId().equals(userId) && findUser.getPassword().equals(password)){
@@ -163,6 +127,24 @@ public class RequestHandler extends Thread {
             }
         } catch (IOException e) {
             log.error(e.getMessage());
+        }
+    }
+
+    private static String getPath(String path) {
+        if (path.equals("/")){
+            return "/index.html";
+        }else{
+            return path;
+        }
+    }
+
+    private static boolean isLogin(String cookieValue) {
+        Map<String, String> stringStringMap = HttpRequestUtils.parseCookies(cookieValue);
+        boolean login = Boolean.parseBoolean(stringStringMap.get("logined"));
+        if (login) {
+            return true;
+        }else{
+            return false;
         }
     }
 
@@ -178,13 +160,7 @@ public class RequestHandler extends Thread {
         responseBody(dos, body);
     }
 
-    private void createUser(String body, Map<String, String> queryParamMap) {
-        String userId = queryParamMap.get("userId");
-        String password = queryParamMap.get("password");
-        String name = queryParamMap.get("name");
-        String email = queryParamMap.get("email");
-
-        User user = new User(userId, password, name, email);
+    private void createUser(User user) {
         DataBase.addUser(user);
         log.debug("User -> userId : {}, password : {}, name : {}, email : {}"
                 ,user.getUserId(), user.getPassword(), user.getName(), user.getEmail());

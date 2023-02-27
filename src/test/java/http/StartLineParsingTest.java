@@ -6,25 +6,25 @@ import java.util.Map;
 
 import org.junit.Test;
 
-public class StartLineTest{
+public class StartLineParsingTest {
 
     @Test
     public void create_method_get() {
-        StartLine line = new StartLine("GET /index.html HTTP/1.1");
-        assertEquals("GET", line.getMethod());
+        StartLineParsing line = new StartLineParsing("GET /index.html HTTP/1.1");
+        assertEquals(HttpMethod.GET, line.getMethod());
         assertEquals("/index.html", line.getPath());
     }
 
     @Test
     public void create_method_post() {
-        StartLine line = new StartLine("POST /index.html HTTP/1.1");
+        StartLineParsing line = new StartLineParsing("POST /index.html HTTP/1.1");
         assertEquals("/index.html", line.getPath());
     }
 
     @Test
     public void create_path_and_params() {
-        StartLine line = new StartLine("GET /user/create?userId=javajigi&password=pass HTTP/1.1");
-        assertEquals("GET", line.getMethod());
+        StartLineParsing line = new StartLineParsing("GET /user/create?userId=javajigi&password=pass HTTP/1.1");
+        assertEquals(HttpMethod.GET, line.getMethod());
         assertEquals("/user/create", line.getPath());
         Map<String, String> params = line.getParams();
         assertEquals(2, params.size());

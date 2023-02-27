@@ -1,7 +1,6 @@
 package http;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,7 +15,7 @@ public class HttpRequest {
 
     private Map<String, String> params = new HashMap<>();
 
-    private StartLine startLine;
+    private StartLineParsing startLineParsing;
 
     public HttpRequest(InputStream is) {
         BufferedReader buffer = null;
@@ -29,7 +28,7 @@ public class HttpRequest {
             /**
              * path, method 정보
              */
-            startLine = new StartLine(line);
+            startLineParsing = new StartLineParsing(line);
 
             /**
              * header를 Map에 저장
@@ -37,29 +36,35 @@ public class HttpRequest {
             line = buffer.readLine();
             while (!line.equals("")) {
                 log.debug("header : {}", line);
+                //": " => 공백이 하나 들어감 (파싱할때 주의)
                 String[] header = line.split(": ");
                 httpHeaders.put(header[0], header[1]);
                 line = buffer.readLine();
             }
 
-            if (getMethod().equals("POST")) {
+            /**
+             * GET, POST 방식에 따라 Param 설정
+             */
+            if (getMethod().isGet()){
+                params = startLineParsing.getParams();
+            }
+
+            if (getMethod().isPost()) {
                 String body = IOUtils.readData(buffer,
                         Integer.parseInt(httpHeaders.get("Content-Length")));
                 params = HttpRequestUtils.parseQueryString(body);
-            }else{
-                params = startLine.getParams();
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public String getMethod() {
-        return startLine.getMethod();
+    public HttpMethod getMethod() {
+        return startLineParsing.getMethod();
     }
 
     public String getPath() {
-        return startLine.getPath();
+        return startLineParsing.getPath();
     }
 
     public String getHeader(String name) {
