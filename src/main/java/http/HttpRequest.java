@@ -58,6 +58,20 @@ public class HttpRequest {
             throw new RuntimeException(e);
         }
     }
+    public Boolean isLogin(){
+        if (getHeader("Cookie") != null){
+            String cookie_value = getHeader("Cookie");
+            Map<String, String> cookies = HttpRequestUtils.parseCookies(cookie_value);
+            boolean login = Boolean.parseBoolean(cookies.get("logined"));
+            if (login){
+                return true;
+            }else{
+                return false;
+            }
+        }else{
+            return false;
+        }
+    }
 
     public HttpMethod getMethod() {
         return startLineParsing.getMethod();

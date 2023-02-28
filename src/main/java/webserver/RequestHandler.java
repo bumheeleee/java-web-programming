@@ -30,7 +30,7 @@ public class RequestHandler extends Thread {
          */
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
             HttpRequest httpRequest = new HttpRequest(in);
-            String path = getPath(httpRequest.getPath());
+            String path = httpRequest.getPath();
 
             /**
              * method : GET
@@ -70,7 +70,7 @@ public class RequestHandler extends Thread {
                 }
 
                 if (path.equals("/user/list")){
-                    if (isLogin(httpRequest.getHeader("Cookie"))){
+                    if (httpRequest.isLogin()){
                         Collection<User> users = DataBase.findAll();
                         StringBuilder sb = new StringBuilder();
                         sb.append("<table>");
@@ -129,25 +129,6 @@ public class RequestHandler extends Thread {
             log.error(e.getMessage());
         }
     }
-
-    private static String getPath(String path) {
-        if (path.equals("/")){
-            return "/index.html";
-        }else{
-            return path;
-        }
-    }
-
-    private static boolean isLogin(String cookieValue) {
-        Map<String, String> stringStringMap = HttpRequestUtils.parseCookies(cookieValue);
-        boolean login = Boolean.parseBoolean(stringStringMap.get("logined"));
-        if (login) {
-            return true;
-        }else{
-            return false;
-        }
-    }
-
     private void response(OutputStream out, byte[] body) throws IOException {
         DataOutputStream dos = new DataOutputStream(out);
         response200Header(dos, body.length);

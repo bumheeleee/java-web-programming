@@ -54,7 +54,11 @@ public class StartLineParsing {
     }
 
     public String getPath() {
-        return path;
+        if (path.equals("/")){
+            return "/index.html";
+        }else{
+            return path;
+        }
     }
 
     public Map<String, String> getParams() {
