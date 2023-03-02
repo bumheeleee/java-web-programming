@@ -2,6 +2,8 @@ package webserver;
 
 import java.io.*;
 import java.net.Socket;
+
+import controller.Controller;
 import http.HttpRequest;
 import http.HttpResponse;
 import org.slf4j.Logger;
@@ -26,30 +28,15 @@ public class RequestHandler extends Thread {
             HttpResponse response = new HttpResponse(out);
             String path = request.getPath();
 
-            if ("/user/create".equals(path)){
-                createUser(request, response);
-            }else if ("/user/login".equals(path)){
-                login(request, response);
-            }else if ("/user/lists".equals(path)) {
-                listUser(request, response);
-            }else{
+            // path에 따른 controller 선택
+            Controller controller = RequestMapping.getController(path);
+            if (controller == null){
                 response.forward(path);
+            }else{
+                controller.service(request, response);
             }
         } catch (IOException e) {
             log.error(e.getMessage());
         }
     }
-
-    private void listUser(HttpRequest request, HttpResponse response) {
-
-    }
-
-    private void login(HttpRequest request, HttpResponse response) {
-
-    }
-
-    private void createUser(HttpRequest request, HttpResponse response) {
-
-    }
-
 }
