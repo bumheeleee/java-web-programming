@@ -7,9 +7,9 @@ import model.User;
 
 import java.util.Collection;
 
-public class ListUserController implements Controller{
+public class ListUserController extends AbstractController{
     @Override
-    public void service(HttpRequest request, HttpResponse response) {
+    protected void doGet(HttpRequest request, HttpResponse response) {
         if (request.isLogin()) {
             Collection<User> users = DataBase.findAll();
             StringBuilder sb = new StringBuilder();
